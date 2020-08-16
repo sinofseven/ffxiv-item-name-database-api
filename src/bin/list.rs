@@ -1,6 +1,6 @@
 use lambda_http::{handler, lambda, Context, IntoResponse, Request, RequestExt, Response};
-use std::collections::HashMap;
 use serde::Serialize;
+use std::collections::HashMap;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
