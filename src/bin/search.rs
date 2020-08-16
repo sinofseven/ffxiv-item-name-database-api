@@ -96,7 +96,7 @@ fn parse_condition(query: &HashMap<String, String>) -> Result<(Language, String)
 fn filter_and_sort(list: &Vec<Item>, lang: &Language, string: &String) -> Vec<Item> {
     let mut filtered: Vec<Item> = list
         .iter()
-        .filter(|&item| item.get_name(lang).eq(string))
+        .filter(|&item| item.get_name(lang).contains(string))
         .cloned()
         .collect();
     filtered.sort_by(|a, b| {
