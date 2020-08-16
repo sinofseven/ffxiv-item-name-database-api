@@ -29,7 +29,7 @@ impl FromStr for Language {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ItemSearchCategory {
     #[serde(rename = "ID")]
     id: Option<u32>,
@@ -37,7 +37,7 @@ pub struct ItemSearchCategory {
     name: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Item {
     #[serde(rename = "ID")]
     id: u32,
@@ -58,7 +58,7 @@ pub struct Item {
 }
 
 impl Item {
-    fn get_name(&self, language: Language) -> String {
+    pub fn get_name(&self, language: &Language) -> String {
         let name = match language {
             Language::Japanese => &self.name_ja,
             Language::English => &self.name_en,
@@ -67,7 +67,7 @@ impl Item {
         };
         name.clone()
     }
-    fn get_item_name_category_id(&self) -> u32 {
+    pub fn get_item_name_category_id(&self) -> u32 {
         match self.item_search_category.id {
             Some(num) => num,
             None => 0,
@@ -98,30 +98,31 @@ fn create_response(status: u16, error: &str, message: Option<String>) -> Respons
 
 pub enum HttpErrorType {
     BadRequest(String),
-    InternalServerError
+    InternalServerError,
 }
 
-pub fn create_error_response(http_error_type: HttpErrorType) -> Response<String> {
-    match http_error_type {
-        HttpErrorType::BadRequest(message) => {
-            create_response(400, "BadRequest", Option::from(message.clone()))
-        },
-        HttpErrorType::InternalServerError => {
-            create_response(500, "InternalServerError", Option::None)
+impl HttpErrorType {
+    pub fn create_response(&self) -> Response<String> {
+        match self {
+            HttpErrorType::InternalServerError => {
+                create_response(500, "InternalServerError", Option::None)
+            }
+            HttpErrorType::BadRequest(message) => {
+                create_response(400, "BadRequest", Some(message.clone()))
+            }
         }
     }
 }
 
-
 pub fn load_database() -> Result<Vec<Item>, HttpErrorType> {
     let file = match File::open("/opt/database.json") {
         Err(_) => return Err(HttpErrorType::InternalServerError),
-        Ok(file) => file
+        Ok(file) => file,
     };
     let reader = BufReader::new(file);
 
     match serde_json::from_reader(reader) {
         Err(_) => return Err(HttpErrorType::InternalServerError),
-        Ok(data) => Ok(data)
+        Ok(data) => Ok(data),
     }
 }

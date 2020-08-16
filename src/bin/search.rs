@@ -1,10 +1,12 @@
 use lambda_http::{handler, lambda, Context, IntoResponse, Request, RequestExt, Response};
 use std::collections::HashMap;
 
-use ffxiv_item_name_database_api::model::{create_error_response, HttpErrorType, Language};
+use ffxiv_item_name_database_api::model::{
+    load_database, HttpErrorType, Item, Language,
+};
 use maplit::hashmap;
-use std::str::FromStr;
 use serde::Serialize;
+use std::str::FromStr;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
@@ -25,15 +27,18 @@ struct TmpData {
     query: HashMap<String, String>,
     lang: String,
     string: String,
+    data: Vec<Item>
 }
 
 async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse, Error> {
-    // `serde_json::Values` impl `IntoResponse` by default
-    // creating an application/json response
     let query = parse_query(&event);
     let (lang, string) = match parse_condition(&query) {
-        Err(e) => return Ok(create_error_response(e)),
-        Ok(result) => result
+        Err(e) => return Ok(e.create_response()),
+        Ok(result) => result,
+    };
+    let all_items = match load_database() {
+        Err(e) => return Ok(e.create_response()),
+        Ok(data) => data,
     };
     let body = TmpData {
         query: query,
@@ -43,7 +48,8 @@ async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse,
             Language::French => "french".to_string(),
             Language::Deutsch => "deutsch".to_string(),
         },
-        string: string.clone()
+        string: string.clone(),
+        data: filter_and_sort(&all_items, &lang, &string)
     };
     Ok(Response::builder()
         .status(200)
@@ -73,7 +79,7 @@ fn parse_condition(query: &HashMap<String, String>) -> Result<(Language, String)
         Some(lang) => match Language::from_str(lang) {
             Err(_) => {
                 return Err(HttpErrorType::BadRequest(format!(
-                    "language \"{}\" is invalid.",
+                    "language '{}' is invalid.",
                     lang
                 )))
             }
@@ -85,4 +91,19 @@ fn parse_condition(query: &HashMap<String, String>) -> Result<(Language, String)
         Some(string) => string.clone(),
     };
     Ok((lang, string))
+}
+
+fn filter_and_sort(list: &Vec<Item>, lang: &Language, string: &String) -> Vec<Item> {
+    let mut filtered: Vec<Item> = list
+        .iter()
+        .filter(|&item| item.get_name(lang).eq(string))
+        .cloned()
+        .collect();
+    filtered.sort_by(|a, b| {
+        let a_id = a.get_item_name_category_id();
+        let b_id = b.get_item_name_category_id();
+        a_id.cmp(&b_id)
+    });
+
+    filtered
 }
