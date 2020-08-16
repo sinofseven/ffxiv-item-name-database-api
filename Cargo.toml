@@ -1,0 +1,17 @@
+[package]
+name = "ffxiv_item_name_database_api"
+version = "0.1.0"
+authors = ["sinofseven <em.s.00001@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "search"
+path = "src/bin/search.rs"
+
+[dependencies]
+lambda_http = { git = "https://github.com/awslabs/aws-lambda-rust-runtime/", branch = "master"}
+serde = {version = "1", features = ["derive"]}
+serde_json = "1"
+tokio = { version = "0.2", features = ["macros"] }
