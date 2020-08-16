@@ -66,3 +66,17 @@ Resources:
             Method: GET
             Path: /list
             PayloadFormatVersion: "1.0"
+
+  SSMParameterApiUrl:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+      Name: /ffxiv-item-name-database/api/api-url
+
+Outputs:
+  SSMParameterNameApiUrl:
+    Value: !Ref SSMParameterApiUrl
+
+  ApiUrl:
+    Value: !GetAtt SSMParameterApiUrl.Value
