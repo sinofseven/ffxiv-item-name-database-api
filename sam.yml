@@ -22,6 +22,11 @@ Resources:
         AllowMethods:
           - GET
 
+  DatabaseDataLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: data/
+
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -31,6 +36,8 @@ Resources:
       MemorySize: 256
       Timeout: 30
       Runtime: provided
+      Layers:
+        - !Ref DatabaseDataLayer
       Events:
         HttpApi:
           Type: HttpApi
@@ -38,4 +45,24 @@ Resources:
             ApiId: !Ref HttpApi
             Method: GET
             Path: /search
+            PayloadFormatVersion: "1.0"
+
+  ListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      AutoPublishAlias: !Ref Env
+      CodeUri: dist/list.zip
+      Handler: lambda_handler
+      MemorySize: 256
+      Timeout: 30
+      Runtime: provided
+      Layers:
+        - !Ref DatabaseDataLayer
+      Events:
+        HttpApi:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: GET
+            Path: /list
             PayloadFormatVersion: "1.0"

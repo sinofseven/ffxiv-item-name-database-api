@@ -6,7 +6,7 @@ type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    lambda::run(handler(hello)).await?;
+    lambda::run(handler(lambda_handler)).await?;
     Ok(())
 }
 
@@ -21,7 +21,7 @@ fn parse_query(event: &Request) -> HashMap<String, String> {
     map
 }
 
-async fn hello(event: Request, _: Context) -> Result<impl IntoResponse, Error> {
+async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse, Error> {
     // `serde_json::Values` impl `IntoResponse` by default
     // creating an application/json response
     let query = parse_query(&event);
