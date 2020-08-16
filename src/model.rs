@@ -1,10 +1,9 @@
-use lambda_http::{IntoResponse, Response};
+use lambda_http::{Request, RequestExt, Response};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::str::FromStr;
-
-type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
 #[derive(Debug)]
 pub enum Language {
@@ -29,8 +28,20 @@ impl FromStr for Language {
     }
 }
 
+impl Language {
+    pub fn to_string(&self) -> String {
+        let lang = match self {
+            Language::Deutsch => "de",
+            Language::French => "fr",
+            Language::English => "en",
+            Language::Japanese => "ja",
+        };
+        lang.to_string()
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct ItemSearchCategory {
+struct ItemSearchCategory {
     #[serde(rename = "ID")]
     id: Option<u32>,
     #[serde(rename = "Name")]
@@ -40,7 +51,7 @@ pub struct ItemSearchCategory {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Item {
     #[serde(rename = "ID")]
-    id: u32,
+    pub id: u32,
     #[serde(rename = "Icon")]
     icon: String,
     #[serde(rename = "ItemSearchCategory")]
@@ -112,6 +123,16 @@ impl HttpErrorType {
             }
         }
     }
+}
+
+pub fn parse_query(event: &Request) -> HashMap<String, String> {
+    let mut map: HashMap<String, String> = HashMap::new();
+    let query = event.query_string_parameters();
+    for (k, v) in query.iter() {
+        map.insert(k.to_string(), v.to_string());
+    }
+
+    map
 }
 
 pub fn load_database() -> Result<Vec<Item>, HttpErrorType> {
