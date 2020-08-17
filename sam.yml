@@ -83,6 +83,8 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref DataTableName
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
       Events:
         HttpApi:
           Type: HttpApi

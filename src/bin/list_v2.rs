@@ -101,7 +101,10 @@ fn filter_and_sort(list: &Vec<Item>, ids: &Vec<u32>) -> Vec<Item> {
 
 fn get_table_name() -> Result<String, HttpErrorType> {
     match env::var("TABLE_NAME") {
-        Err(_) => Err(HttpErrorType::InternalServerError),
+        Err(e) => {
+            println!("failed get environment {:?}", e);
+            Err(HttpErrorType::InternalServerError)
+        },
         Ok(name) => Ok(name),
     }
 }
@@ -130,7 +133,10 @@ async fn get_data(ids: &Vec<u32>, table_name: &String) -> Result<Vec<Item>, Http
         });
         while keys_and_attributes.is_some() {
             let current: KeysAndAttributes = match &keys_and_attributes {
-                None => return Err(HttpErrorType::InternalServerError),
+                None => {
+                    println!("failed get current keys and attributes");
+                    return Err(HttpErrorType::InternalServerError);
+                },
                 Some(keys) => keys.clone(),
             };
 
@@ -142,7 +148,10 @@ async fn get_data(ids: &Vec<u32>, table_name: &String) -> Result<Vec<Item>, Http
             };
 
             let resp = match client.batch_get_item(input).await {
-                Err(_) => return Err(HttpErrorType::InternalServerError),
+                Err(e) => {
+                    println!("failed fetch data: {:?}", e);
+                    return Err(HttpErrorType::InternalServerError);
+                },
                 Ok(resp) => resp,
             };
             match resp.responses {
