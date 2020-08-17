@@ -1,7 +1,7 @@
 SHELL = /usr/bin/env bash -xeuo pipefail
 
 stack_name:=ffxiv-item-name-database-api
-template_path:=template.yml
+template_path:=dist/template.yml
 
 build:
 	rm -rf dist; \

@@ -75,7 +75,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       AutoPublishAlias: !Ref Env
-      CodeUri: dist/list.zip
+      CodeUri: dist/list_v2.zip
       Handler: lambda_handler
       MemorySize: 256
       Timeout: 30
