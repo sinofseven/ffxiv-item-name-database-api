@@ -76,6 +76,8 @@ Resources:
       MemorySize: 256
       Timeout: 30
       Runtime: provided
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
       Events:
         HttpApi:
           Type: HttpApi

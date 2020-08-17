@@ -195,7 +195,10 @@ async fn scan_and_sort(lang: &Language, string: &String) -> Result<Vec<Item>, Ht
         };
 
         let resp = match client.scan(input).await {
-            Err(_) => return Err(HttpErrorType::InternalServerError),
+            Err(e) => {
+                println!("scan error{:?}", e);
+                return Err(HttpErrorType::InternalServerError)
+            },
             Ok(resp) => resp
         };
 
