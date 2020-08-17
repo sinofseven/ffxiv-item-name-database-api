@@ -1,13 +1,15 @@
 use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
 use std::collections::HashMap;
 
-use ffxiv_item_name_database_api::model::{load_database, parse_query, HttpErrorType, Item, Language, ItemSearchCategory};
-use serde::Serialize;
-use std::str::FromStr;
-use rusoto_dynamodb::{AttributeValue, DynamoDbClient, ScanInput, DynamoDb};
-use rusoto_core::Region;
+use ffxiv_item_name_database_api::model::{
+    load_database, parse_query, HttpErrorType, Item, ItemSearchCategory, Language,
+};
 use maplit::hashmap;
+use rusoto_core::Region;
+use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, ScanInput};
+use serde::Serialize;
 use serde_json::ser::CharEscape::CarriageReturn;
+use std::str::FromStr;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
@@ -38,7 +40,7 @@ async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse,
     };
     let items = match scan_and_sort(&lang, &string).await {
         Err(e) => return Ok(e.create_response()),
-        Ok(items) => items
+        Ok(items) => items,
     };
     let body = ResponseData {
         condition: Condition {
@@ -103,16 +105,16 @@ fn convert_item(item: &HashMap<String, AttributeValue>) -> Result<Item, HttpErro
                 None => return Err(HttpErrorType::InternalServerError),
                 Some(id) => match id.parse::<u32>() {
                     Err(_) => return Err(HttpErrorType::InternalServerError),
-                    Ok(id) => id
-                }
-            }
+                    Ok(id) => id,
+                },
+            },
         },
         icon: match item.get("Icon") {
             None => return Err(HttpErrorType::InternalServerError),
             Some(icon) => match &icon.s {
                 None => return Err(HttpErrorType::InternalServerError),
-                Some(icon) => icon.clone()
-            }
+                Some(icon) => icon.clone(),
+            },
         },
         item_search_category: ItemSearchCategory {
             id: match item_search_category {
@@ -121,53 +123,53 @@ fn convert_item(item: &HashMap<String, AttributeValue>) -> Result<Item, HttpErro
                     None => None,
                     Some(id) => match id.parse::<u32>() {
                         Err(_) => return Err(HttpErrorType::InternalServerError),
-                        Ok(id) => Some(id)
-                    }
-                }
+                        Ok(id) => Some(id),
+                    },
+                },
             },
             name: match item_search_category {
                 None => None,
                 Some(name) => match &name.s {
                     None => None,
-                    Some(name) => Some(name.clone())
-                }
-            }
+                    Some(name) => Some(name.clone()),
+                },
+            },
         },
         name_de: match item.get("Name_de") {
             None => return Err(HttpErrorType::InternalServerError),
             Some(name) => match &name.s {
                 None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone()
-            }
+                Some(name) => name.clone(),
+            },
         },
         name_en: match item.get("Name_en") {
             None => return Err(HttpErrorType::InternalServerError),
             Some(name) => match &name.s {
                 None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone()
-            }
+                Some(name) => name.clone(),
+            },
         },
         name_fr: match item.get("Name_fr") {
             None => return Err(HttpErrorType::InternalServerError),
             Some(name) => match &name.s {
                 None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone()
-            }
+                Some(name) => name.clone(),
+            },
         },
         name_ja: match item.get("Name_ja") {
             None => return Err(HttpErrorType::InternalServerError),
             Some(name) => match &name.s {
                 None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone()
-            }
+                Some(name) => name.clone(),
+            },
         },
         eorzea_database_id: match item.get("EorzeaDatabaseId") {
             None => return Err(HttpErrorType::InternalServerError),
             Some(name) => match &name.s {
                 None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone()
-            }
-        }
+                Some(name) => name.clone(),
+            },
+        },
     })
 }
 
@@ -179,7 +181,8 @@ async fn scan_and_sort(lang: &Language, string: &String) -> Result<Vec<Item>, Ht
 
     while {
         let input = ScanInput {
-            table_name: "ffxiv-item-name-database-resources-ItemDataTable-11T4AVHK7AKRA".to_string(),
+            table_name: "ffxiv-item-name-database-resources-ItemDataTable-11T4AVHK7AKRA"
+                .to_string(),
             filter_expression: Some("contains(#path, :value)".to_string()),
             expression_attribute_names: Some(hashmap! {
                 "#path".to_string() => lang.get_key()
@@ -197,22 +200,22 @@ async fn scan_and_sort(lang: &Language, string: &String) -> Result<Vec<Item>, Ht
         let resp = match client.scan(input).await {
             Err(e) => {
                 println!("scan error{:?}", e);
-                return Err(HttpErrorType::InternalServerError)
-            },
-            Ok(resp) => resp
+                return Err(HttpErrorType::InternalServerError);
+            }
+            Ok(resp) => resp,
         };
 
         last_evaluated_key = resp.last_evaluated_key;
 
         let items: Vec<HashMap<String, AttributeValue>> = match resp.items {
             None => Vec::new(),
-            Some(items) => items
+            Some(items) => items,
         };
 
         for item in items {
             result.push(match convert_item(&item) {
                 Err(_) => return Err(HttpErrorType::InternalServerError),
-                Ok(item) => item
+                Ok(item) => item,
             });
         }
 

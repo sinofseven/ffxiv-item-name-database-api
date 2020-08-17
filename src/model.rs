@@ -1,4 +1,5 @@
 use lambda_http::{Request, RequestExt, Response};
+use rusoto_dynamodb::AttributeValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
@@ -156,4 +157,83 @@ pub fn load_database() -> Result<Vec<Item>, HttpErrorType> {
         Err(_) => return Err(HttpErrorType::InternalServerError),
         Ok(data) => Ok(data),
     }
+}
+
+pub fn convert_dynamodb_item_to_item(
+    item: &HashMap<String, AttributeValue>,
+) -> Result<Item, HttpErrorType> {
+    let item_search_category = item.get("ItemSearchCategory");
+    Ok(Item {
+        id: match item.get("ID") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(id) => match &id.n {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(id) => match id.parse::<u32>() {
+                    Err(_) => return Err(HttpErrorType::InternalServerError),
+                    Ok(id) => id,
+                },
+            },
+        },
+        icon: match item.get("Icon") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(icon) => match &icon.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(icon) => icon.clone(),
+            },
+        },
+        item_search_category: ItemSearchCategory {
+            id: match item_search_category {
+                None => None,
+                Some(id) => match &id.n {
+                    None => None,
+                    Some(id) => match id.parse::<u32>() {
+                        Err(_) => return Err(HttpErrorType::InternalServerError),
+                        Ok(id) => Some(id),
+                    },
+                },
+            },
+            name: match item_search_category {
+                None => None,
+                Some(name) => match &name.s {
+                    None => None,
+                    Some(name) => Some(name.clone()),
+                },
+            },
+        },
+        name_de: match item.get("Name_de") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+        name_en: match item.get("Name_en") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+        name_fr: match item.get("Name_fr") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+        name_ja: match item.get("Name_ja") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+        eorzea_database_id: match item.get("EorzeaDatabaseId") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+    })
 }

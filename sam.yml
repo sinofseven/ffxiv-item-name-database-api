@@ -6,6 +6,10 @@ Parameters:
     Type: String
     Default: api
 
+  DataTableName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /ffxiv-item-name-database/item-data-table-name
+
 Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
@@ -65,6 +69,27 @@ Resources:
             ApiId: !Ref HttpApi
             Method: GET
             Path: /list
+            PayloadFormatVersion: "1.0"
+
+  ListV2Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      AutoPublishAlias: !Ref Env
+      CodeUri: dist/list.zip
+      Handler: lambda_handler
+      MemorySize: 256
+      Timeout: 30
+      Runtime: provided
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref DataTableName
+      Events:
+        HttpApi:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: GET
+            Path: /list/v2
             PayloadFormatVersion: "1.0"
 
   DynamoDBFunction:
