@@ -38,14 +38,24 @@ impl Language {
         };
         lang.to_string()
     }
+
+    pub fn get_key(&self) -> String {
+        let key = match self {
+            Language::Deutsch => "Name_de",
+            Language::French => "Name_fr",
+            Language::English => "Name_en",
+            Language::Japanese => "Name_ja",
+        };
+        key.to_string()
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-struct ItemSearchCategory {
+pub struct ItemSearchCategory {
     #[serde(rename = "ID")]
-    id: Option<u32>,
+    pub id: Option<u32>,
     #[serde(rename = "Name")]
-    name: Option<String>,
+    pub name: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -53,19 +63,19 @@ pub struct Item {
     #[serde(rename = "ID")]
     pub id: u32,
     #[serde(rename = "Icon")]
-    icon: String,
+    pub icon: String,
     #[serde(rename = "ItemSearchCategory")]
-    item_search_category: ItemSearchCategory,
+    pub item_search_category: ItemSearchCategory,
     #[serde(rename = "Name_de")]
-    name_de: String,
+    pub name_de: String,
     #[serde(rename = "Name_en")]
-    name_en: String,
+    pub name_en: String,
     #[serde(rename = "Name_fr")]
-    name_fr: String,
+    pub name_fr: String,
     #[serde(rename = "Name_ja")]
-    name_ja: String,
+    pub name_ja: String,
     #[serde(rename = "EorzeaDatabaseId")]
-    eorzea_database_id: String,
+    pub eorzea_database_id: String,
 }
 
 impl Item {

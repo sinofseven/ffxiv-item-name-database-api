@@ -41,6 +41,3 @@ workflows:
     jobs:
       - deploy:
           context: ffxiv-item-name-database
-          filters:
-            branches:
-              only: master

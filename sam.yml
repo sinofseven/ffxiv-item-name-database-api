@@ -67,6 +67,24 @@ Resources:
             Path: /list
             PayloadFormatVersion: "1.0"
 
+  DynamoDBFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      AutoPublishAlias: !Ref Env
+      CodeUri: dist/dynamodb.zip
+      Handler: lambda_handler
+      MemorySize: 256
+      Timeout: 30
+      Runtime: provided
+      Events:
+        HttpApi:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: GET
+            Path: /dynamodb
+            PayloadFormatVersion: "1.0"
+
   SSMParameterApiUrl:
     Type: AWS::SSM::Parameter
     Properties:
