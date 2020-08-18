@@ -32,7 +32,7 @@ def handler(event, context):
     except (Exception, InternalServerError):
         pass
     return {
-        "status": status,
+        "statusCode": status,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
