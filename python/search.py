@@ -1,5 +1,6 @@
 import json
 import os
+from decimal import Decimal
 
 import boto3
 from boto3.dynamodb.conditions import Attr
@@ -18,27 +19,36 @@ class InternalServerError(Exception):
 
 
 def handler(event, context):
-    response = {
-        "status": 500,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-        },
-    }
+    status = 500
     body = {"type": "InternalServerError"}
     try:
         lang, name = get_condition(event)
         items = get_items(lang, name)
         body = {"Condition": {"language": lang, "string": name}, "Results": items}
-
-        response["status"] = 200
+        status = 200
     except BadRequestError as e:
-        response["status"] = 400
+        status = 400
         body["message"] = str(e)
     except (Exception, InternalServerError):
         pass
-    response["body"] = json.dumps(body, default=str, ensure_ascii=False)
-    return response
+    return {
+        "status": status,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        },
+        "body": json.dumps(body, default=default, ensure_ascii=False),
+    }
+
+
+def default(obj):
+    if isinstance(obj, Decimal):
+        num = int(obj)
+        return num if num == obj else float(obj)
+    try:
+        return str(obj)
+    except Exception:
+        return None
 
 
 def get_condition(event):
