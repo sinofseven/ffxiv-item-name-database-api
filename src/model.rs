@@ -1,9 +1,9 @@
 use lambda_http::{Request, RequestExt, Response};
+use rusoto_dynamodb::AttributeValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::BufReader;
 use std::str::FromStr;
+use std::env;
 
 #[derive(Debug)]
 pub enum Language {
@@ -38,14 +38,24 @@ impl Language {
         };
         lang.to_string()
     }
+
+    pub fn get_key(&self) -> String {
+        let key = match self {
+            Language::Deutsch => "Name_de",
+            Language::French => "Name_fr",
+            Language::English => "Name_en",
+            Language::Japanese => "Name_ja",
+        };
+        key.to_string()
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-struct ItemSearchCategory {
+pub struct ItemSearchCategory {
     #[serde(rename = "ID")]
-    id: Option<u32>,
+    pub id: Option<u32>,
     #[serde(rename = "Name")]
-    name: Option<String>,
+    pub name: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -53,19 +63,19 @@ pub struct Item {
     #[serde(rename = "ID")]
     pub id: u32,
     #[serde(rename = "Icon")]
-    icon: String,
+    pub icon: String,
     #[serde(rename = "ItemSearchCategory")]
-    item_search_category: ItemSearchCategory,
+    pub item_search_category: ItemSearchCategory,
     #[serde(rename = "Name_de")]
-    name_de: String,
+    pub name_de: String,
     #[serde(rename = "Name_en")]
-    name_en: String,
+    pub name_en: String,
     #[serde(rename = "Name_fr")]
-    name_fr: String,
+    pub name_fr: String,
     #[serde(rename = "Name_ja")]
-    name_ja: String,
+    pub name_ja: String,
     #[serde(rename = "EorzeaDatabaseId")]
-    eorzea_database_id: String,
+    pub eorzea_database_id: String,
 }
 
 impl Item {
@@ -78,7 +88,7 @@ impl Item {
         };
         name.clone()
     }
-    pub fn get_item_name_category_id(&self) -> u32 {
+    pub fn get_item_search_category_id(&self) -> u32 {
         match self.item_search_category.id {
             Some(num) => num,
             None => 0,
@@ -135,15 +145,91 @@ pub fn parse_query(event: &Request) -> HashMap<String, String> {
     map
 }
 
-pub fn load_database() -> Result<Vec<Item>, HttpErrorType> {
-    let file = match File::open("/opt/database.json") {
-        Err(_) => return Err(HttpErrorType::InternalServerError),
-        Ok(file) => file,
-    };
-    let reader = BufReader::new(file);
-
-    match serde_json::from_reader(reader) {
-        Err(_) => return Err(HttpErrorType::InternalServerError),
-        Ok(data) => Ok(data),
+pub fn get_table_name() -> Result<String, HttpErrorType> {
+    match env::var("TABLE_NAME") {
+        Err(e) => {
+            println!("failed get environment {:?}", e);
+            Err(HttpErrorType::InternalServerError)
+        }
+        Ok(name) => Ok(name),
     }
+}
+
+pub fn convert_dynamodb_item_to_item(
+    item: &HashMap<String, AttributeValue>,
+) -> Result<Item, HttpErrorType> {
+    let item_search_category = item.get("ItemSearchCategory");
+    Ok(Item {
+        id: match item.get("ID") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(id) => match &id.n {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(id) => match id.parse::<u32>() {
+                    Err(_) => return Err(HttpErrorType::InternalServerError),
+                    Ok(id) => id,
+                },
+            },
+        },
+        icon: match item.get("Icon") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(icon) => match &icon.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(icon) => icon.clone(),
+            },
+        },
+        item_search_category: ItemSearchCategory {
+            id: match item_search_category {
+                None => None,
+                Some(id) => match &id.n {
+                    None => None,
+                    Some(id) => match id.parse::<u32>() {
+                        Err(_) => return Err(HttpErrorType::InternalServerError),
+                        Ok(id) => Some(id),
+                    },
+                },
+            },
+            name: match item_search_category {
+                None => None,
+                Some(name) => match &name.s {
+                    None => None,
+                    Some(name) => Some(name.clone()),
+                },
+            },
+        },
+        name_de: match item.get("Name_de") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+        name_en: match item.get("Name_en") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+        name_fr: match item.get("Name_fr") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+        name_ja: match item.get("Name_ja") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+        eorzea_database_id: match item.get("EorzeaDatabaseId") {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(name) => match &name.s {
+                None => return Err(HttpErrorType::InternalServerError),
+                Some(name) => name.clone(),
+            },
+        },
+    })
 }
