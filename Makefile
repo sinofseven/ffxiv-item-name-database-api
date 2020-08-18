@@ -7,7 +7,7 @@ build:
 	rm -rf dist; \
 	name="rust_build"; \
 	docker image build -t $$name .; \
-	docker container run -it --name $$name $$name; \
+	docker container run --name $$name $$name; \
 	docker container cp $$name:/code/target/lambda/release/ dist; \
 	docker container rm $$name; \
 	docker image rm $$name;
