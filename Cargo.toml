@@ -14,14 +14,6 @@ path = "src/bin/search.rs"
 name = "list"
 path = "src/bin/list.rs"
 
-[[bin]]
-name = "list_v2"
-path = "src/bin/list_v2.rs"
-
-[[bin]]
-name = "dynamodb"
-path = "src/bin/dynamodb.rs"
-
 [dependencies]
 lambda_http = { git = "https://github.com/awslabs/aws-lambda-rust-runtime/", branch = "master"}
 serde = {version = "1", features = ["derive"]}

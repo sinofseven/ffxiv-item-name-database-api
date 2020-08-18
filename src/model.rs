@@ -2,9 +2,8 @@ use lambda_http::{Request, RequestExt, Response};
 use rusoto_dynamodb::AttributeValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::BufReader;
 use std::str::FromStr;
+use std::env;
 
 #[derive(Debug)]
 pub enum Language {
@@ -89,7 +88,7 @@ impl Item {
         };
         name.clone()
     }
-    pub fn get_item_name_category_id(&self) -> u32 {
+    pub fn get_item_search_category_id(&self) -> u32 {
         match self.item_search_category.id {
             Some(num) => num,
             None => 0,
@@ -146,16 +145,13 @@ pub fn parse_query(event: &Request) -> HashMap<String, String> {
     map
 }
 
-pub fn load_database() -> Result<Vec<Item>, HttpErrorType> {
-    let file = match File::open("/opt/database.json") {
-        Err(_) => return Err(HttpErrorType::InternalServerError),
-        Ok(file) => file,
-    };
-    let reader = BufReader::new(file);
-
-    match serde_json::from_reader(reader) {
-        Err(_) => return Err(HttpErrorType::InternalServerError),
-        Ok(data) => Ok(data),
+pub fn get_table_name() -> Result<String, HttpErrorType> {
+    match env::var("TABLE_NAME") {
+        Err(e) => {
+            println!("failed get environment {:?}", e);
+            Err(HttpErrorType::InternalServerError)
+        }
+        Ok(name) => Ok(name),
     }
 }
 

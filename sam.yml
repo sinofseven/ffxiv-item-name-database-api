@@ -2,13 +2,18 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 
 Parameters:
-  Env:
-    Type: String
-    Default: api
-
   DataTableName:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /ffxiv-item-name-database/item-data-table-name
+
+Globals:
+  Function:
+    AutoPublishAlias: api
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref DataTableName
 
 Resources:
   HttpApi:
@@ -26,82 +31,28 @@ Resources:
         AllowMethods:
           - GET
 
-  DatabaseDataLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      ContentUri: data/
-
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      AutoPublishAlias: !Ref Env
       CodeUri: dist/search.zip
-      Handler: hello
-      MemorySize: 256
-      Timeout: 30
+      Handler: lambda_handler
       Runtime: provided
-      Layers:
-        - !Ref DatabaseDataLayer
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
       Events:
         HttpApi:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
             Method: GET
-            Path: /search
+            Path: /api/search
             PayloadFormatVersion: "1.0"
 
   ListFunction:
     Type: AWS::Serverless::Function
     Properties:
-      AutoPublishAlias: !Ref Env
       CodeUri: dist/list.zip
       Handler: lambda_handler
-      MemorySize: 256
-      Timeout: 30
-      Runtime: provided
-      Layers:
-        - !Ref DatabaseDataLayer
-      Events:
-        HttpApi:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Method: GET
-            Path: /list
-            PayloadFormatVersion: "1.0"
-
-  ListV2Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      AutoPublishAlias: !Ref Env
-      CodeUri: dist/list_v2.zip
-      Handler: lambda_handler
-      MemorySize: 256
-      Timeout: 30
-      Runtime: provided
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref DataTableName
-      Policies:
-        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
-      Events:
-        HttpApi:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Method: GET
-            Path: /list/v2
-            PayloadFormatVersion: "1.0"
-
-  DynamoDBFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      AutoPublishAlias: !Ref Env
-      CodeUri: dist/dynamodb.zip
-      Handler: lambda_handler
-      MemorySize: 256
-      Timeout: 30
       Runtime: provided
       Policies:
         - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
@@ -111,7 +62,41 @@ Resources:
           Properties:
             ApiId: !Ref HttpApi
             Method: GET
-            Path: /dynamodb
+            Path: /api/list
+            PayloadFormatVersion: "1.0"
+
+  PythonSearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: python/
+      Handler: search.handler
+      Runtime: python3.8
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
+      Events:
+        HttpApi:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: GET
+            Path: /python/search
+            PayloadFormatVersion: "1.0"
+
+  PythonListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: python/
+      Handler: list.handler
+      Runtime: python3.8
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
+      Events:
+        HttpApi:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: GET
+            Path: /python/list
             PayloadFormatVersion: "1.0"
 
   SSMParameterApiUrl:
