@@ -2,8 +2,8 @@ use lambda_http::{Request, RequestExt, Response};
 use rusoto_dynamodb::AttributeValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::str::FromStr;
 use std::env;
+use std::str::FromStr;
 
 #[derive(Debug)]
 pub enum Language {
@@ -113,6 +113,7 @@ fn create_response(status: u16, error: &str, message: Option<String>) -> Respons
     Response::builder()
         .status(status)
         .header("Content-Type", "application/json")
+        .header("Access-Control-Allow-Origin", "*")
         .body(body)
         .unwrap()
 }

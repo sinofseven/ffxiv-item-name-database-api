@@ -1,4 +1,6 @@
-use ffxiv_item_name_database_api::model::{convert_dynamodb_item_to_item, parse_query, HttpErrorType, Item, get_table_name};
+use ffxiv_item_name_database_api::model::{
+    convert_dynamodb_item_to_item, get_table_name, parse_query, HttpErrorType, Item,
+};
 use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
 use rusoto_core::Region;
 use rusoto_dynamodb::{
@@ -6,7 +8,6 @@ use rusoto_dynamodb::{
 };
 use serde::Serialize;
 use std::collections::HashMap;
-use std::env;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 

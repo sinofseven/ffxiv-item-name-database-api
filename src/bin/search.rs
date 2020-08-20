@@ -1,7 +1,9 @@
 use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
 use std::collections::HashMap;
 
-use ffxiv_item_name_database_api::model::{parse_query, HttpErrorType, Item, ItemSearchCategory, Language, get_table_name};
+use ffxiv_item_name_database_api::model::{
+    get_table_name, parse_query, HttpErrorType, Item, ItemSearchCategory, Language,
+};
 use maplit::hashmap;
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, ScanInput};
@@ -37,7 +39,7 @@ async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse,
     };
     let table_name = match get_table_name() {
         Err(e) => return Ok(e.create_response()),
-        Ok(name) => name
+        Ok(name) => name,
     };
     let items = match scan_and_sort(&lang, &string, &table_name).await {
         Err(e) => return Ok(e.create_response()),
@@ -159,7 +161,11 @@ fn convert_item(item: &HashMap<String, AttributeValue>) -> Result<Item, HttpErro
     })
 }
 
-async fn scan_and_sort(lang: &Language, string: &String, table_name: &String) -> Result<Vec<Item>, HttpErrorType> {
+async fn scan_and_sort(
+    lang: &Language,
+    string: &String,
+    table_name: &String,
+) -> Result<Vec<Item>, HttpErrorType> {
     let mut result: Vec<Item> = Vec::new();
 
     let client = DynamoDbClient::new(Region::default());
