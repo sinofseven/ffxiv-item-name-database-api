@@ -103,11 +103,18 @@ Resources:
             Path: /python/list
             PayloadFormatVersion: "1.0"
 
+  SSMParameterApiDomainName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Value: !Sub ${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+      Name: /ffxiv-item-name-database/api/api-domain-name
+
   SSMParameterApiUrl:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+      Value: !Sub https://${SSMParameterApiDomainName.Value}
       Name: /ffxiv-item-name-database/api/api-url
 
   SSMParameterApiOriginPath:
@@ -118,6 +125,9 @@ Resources:
       Name: /ffxiv-item-name-database/api/api-origin-path
 
 Outputs:
+  SSMParameterNameApiDomainName:
+    Value: !Ref SSMParameterApiDomainName
+
   SSMParameterNameApiUrl:
     Value: !Ref SSMParameterApiUrl
 
