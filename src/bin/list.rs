@@ -1,5 +1,5 @@
 use ffxiv_item_name_database_api::model::{
-    convert_dynamodb_item_to_item, get_table_name, parse_query, HttpErrorType, Item,
+    convert_dynamodb_item_to_item, get_table_name, parse_query, sort_func, HttpErrorType, Item,
 };
 use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
 use rusoto_core::Region;
@@ -151,11 +151,7 @@ async fn get_data(ids: &Vec<u32>, table_name: &String) -> Result<Vec<Item>, Http
         }
     }
 
-    result.sort_by(|a, b| {
-        let id_a = a.get_item_search_category_id();
-        let id_b = b.get_item_search_category_id();
-        id_a.cmp(&id_b)
-    });
+    result.sort_by(sort_func);
 
     Ok(result)
 }

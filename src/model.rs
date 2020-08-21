@@ -1,6 +1,7 @@
 use lambda_http::{Request, RequestExt, Response};
 use rusoto_dynamodb::AttributeValue;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;
@@ -240,4 +241,14 @@ pub fn convert_dynamodb_item_to_item(
             },
         },
     })
+}
+
+pub fn sort_func(a: &Item, b: &Item) -> Ordering {
+    let order = a
+        .get_item_search_category_id()
+        .cmp(&b.get_item_search_category_id());
+    match order {
+        Ordering::Equal => a.id.cmp(&b.id),
+        _ => order,
+    }
 }

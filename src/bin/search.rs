@@ -2,8 +2,8 @@ use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
 use std::collections::HashMap;
 
 use ffxiv_item_name_database_api::model::{
-    convert_dynamodb_item_to_item, get_table_name, parse_query, HttpErrorType, Item,
-    ItemSearchCategory, Language,
+    convert_dynamodb_item_to_item, get_table_name, parse_query, sort_func, HttpErrorType, Item,
+    Language,
 };
 use maplit::hashmap;
 use rusoto_core::Region;
@@ -137,11 +137,7 @@ async fn scan_and_sort(
         last_evaluated_key.is_some()
     } {}
 
-    result.sort_by(|a, b| {
-        let id_a = a.get_item_search_category_id();
-        let id_b = b.get_item_search_category_id();
-        id_a.cmp(&id_b)
-    });
+    result.sort_by(sort_func);
 
     Ok(result)
 }
