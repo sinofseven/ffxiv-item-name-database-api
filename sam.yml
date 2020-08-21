@@ -6,6 +6,10 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /ffxiv-item-name-database/item-data-table-name
 
+  ApiOriginPath:
+    Type: String
+    Default: api
+
 Globals:
   Function:
     AutoPublishAlias: api
@@ -45,7 +49,7 @@ Resources:
           Properties:
             ApiId: !Ref HttpApi
             Method: GET
-            Path: /api/search
+            Path: $Sub /${ApiOriginPath}/search
             PayloadFormatVersion: "1.0"
 
   ListFunction:
@@ -62,7 +66,7 @@ Resources:
           Properties:
             ApiId: !Ref HttpApi
             Method: GET
-            Path: /api/list
+            Path: $Sub /${ApiOriginPath}/list
             PayloadFormatVersion: "1.0"
 
   PythonSearchFunction:
@@ -106,9 +110,20 @@ Resources:
       Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
       Name: /ffxiv-item-name-database/api/api-url
 
+  SSMParameterApiOriginPath:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Value: !Ref ApiOriginPath
+      Name: /ffxiv-item-name-database/api/api-origin-path
+
 Outputs:
   SSMParameterNameApiUrl:
     Value: !Ref SSMParameterApiUrl
 
   ApiUrl:
     Value: !GetAtt SSMParameterApiUrl.Value
+
+  SSMParameterNameApiOriginPath:
+    Value: !Ref SSMParameterApiOriginPath
+
