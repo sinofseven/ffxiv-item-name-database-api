@@ -164,8 +164,8 @@ pub fn convert_dynamodb_item_to_item(
         None => return Err(HttpErrorType::InternalServerError),
         Some(attr) => match &attr.m {
             None => return Err(HttpErrorType::InternalServerError),
-            Some(map) => map
-        }
+            Some(map) => map,
+        },
     };
     Ok(Item {
         id: match item.get("ID") {

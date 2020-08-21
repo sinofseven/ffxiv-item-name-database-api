@@ -2,7 +2,8 @@ use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
 use std::collections::HashMap;
 
 use ffxiv_item_name_database_api::model::{
-    get_table_name, parse_query, HttpErrorType, Item, ItemSearchCategory, Language,
+    convert_dynamodb_item_to_item, get_table_name, parse_query, HttpErrorType, Item,
+    ItemSearchCategory, Language,
 };
 use maplit::hashmap;
 use rusoto_core::Region;
@@ -84,83 +85,6 @@ fn parse_condition(query: &HashMap<String, String>) -> Result<(Language, String)
     Ok((lang, string))
 }
 
-fn convert_item(item: &HashMap<String, AttributeValue>) -> Result<Item, HttpErrorType> {
-    let item_search_category = item.get("ItemSearchCategory");
-    Ok(Item {
-        id: match item.get("ID") {
-            None => return Err(HttpErrorType::InternalServerError),
-            Some(id) => match &id.n {
-                None => return Err(HttpErrorType::InternalServerError),
-                Some(id) => match id.parse::<u32>() {
-                    Err(_) => return Err(HttpErrorType::InternalServerError),
-                    Ok(id) => id,
-                },
-            },
-        },
-        icon: match item.get("Icon") {
-            None => return Err(HttpErrorType::InternalServerError),
-            Some(icon) => match &icon.s {
-                None => return Err(HttpErrorType::InternalServerError),
-                Some(icon) => icon.clone(),
-            },
-        },
-        item_search_category: ItemSearchCategory {
-            id: match item_search_category {
-                None => None,
-                Some(id) => match &id.n {
-                    None => None,
-                    Some(id) => match id.parse::<u32>() {
-                        Err(_) => return Err(HttpErrorType::InternalServerError),
-                        Ok(id) => Some(id),
-                    },
-                },
-            },
-            name: match item_search_category {
-                None => None,
-                Some(name) => match &name.s {
-                    None => None,
-                    Some(name) => Some(name.clone()),
-                },
-            },
-        },
-        name_de: match item.get("Name_de") {
-            None => return Err(HttpErrorType::InternalServerError),
-            Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone(),
-            },
-        },
-        name_en: match item.get("Name_en") {
-            None => return Err(HttpErrorType::InternalServerError),
-            Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone(),
-            },
-        },
-        name_fr: match item.get("Name_fr") {
-            None => return Err(HttpErrorType::InternalServerError),
-            Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone(),
-            },
-        },
-        name_ja: match item.get("Name_ja") {
-            None => return Err(HttpErrorType::InternalServerError),
-            Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone(),
-            },
-        },
-        eorzea_database_id: match item.get("EorzeaDatabaseId") {
-            None => return Err(HttpErrorType::InternalServerError),
-            Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
-                Some(name) => name.clone(),
-            },
-        },
-    })
-}
-
 async fn scan_and_sort(
     lang: &Language,
     string: &String,
@@ -204,7 +128,7 @@ async fn scan_and_sort(
         };
 
         for item in items {
-            result.push(match convert_item(&item) {
+            result.push(match convert_dynamodb_item_to_item(&item) {
                 Err(_) => return Err(HttpErrorType::InternalServerError),
                 Ok(item) => item,
             });
