@@ -160,7 +160,13 @@ pub fn convert_dynamodb_item_to_item(
     item: &HashMap<String, AttributeValue>,
 ) -> Result<Item, HttpErrorType> {
     println!("Item Data {:?}", item);
-    let item_search_category = item.get("ItemSearchCategory");
+    let item_search_category = match item.get("ItemSearchCategory") {
+        None => return Err(HttpErrorType::InternalServerError),
+        Some(attr) => match &attr.m {
+            None => return Err(HttpErrorType::InternalServerError),
+            Some(map) => map
+        }
+    };
     Ok(Item {
         id: match item.get("ID") {
             None => return Err(HttpErrorType::InternalServerError),
@@ -180,7 +186,7 @@ pub fn convert_dynamodb_item_to_item(
             },
         },
         item_search_category: ItemSearchCategory {
-            id: match item_search_category {
+            id: match item_search_category.get("ID") {
                 None => None,
                 Some(id) => match &id.n {
                     None => None,
@@ -190,7 +196,7 @@ pub fn convert_dynamodb_item_to_item(
                     },
                 },
             },
-            name: match item_search_category {
+            name: match item_search_category.get("Name") {
                 None => None,
                 Some(name) => match &name.s {
                     None => None,
