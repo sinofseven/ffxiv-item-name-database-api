@@ -159,6 +159,7 @@ pub fn get_table_name() -> Result<String, HttpErrorType> {
 pub fn convert_dynamodb_item_to_item(
     item: &HashMap<String, AttributeValue>,
 ) -> Result<Item, HttpErrorType> {
+    println!("Item Data {:?}", item);
     let item_search_category = item.get("ItemSearchCategory");
     Ok(Item {
         id: match item.get("ID") {
