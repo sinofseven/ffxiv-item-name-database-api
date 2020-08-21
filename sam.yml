@@ -44,7 +44,7 @@ Resources:
       Policies:
         - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
       Events:
-        HttpApi:
+        HttpApiV2:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
@@ -61,7 +61,7 @@ Resources:
       Policies:
         - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
       Events:
-        HttpApi:
+        HttpApiV2:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
