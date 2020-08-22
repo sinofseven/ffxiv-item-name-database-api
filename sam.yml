@@ -124,6 +124,13 @@ Resources:
       Value: !Ref ApiOriginPath
       Name: /ffxiv-item-name-database/api/api-origin-path
 
+  SSMParameterSearchFunctionName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Value: !Ref SearchFunction
+      Name: /ffxiv-item-name-database/api/search-function-name
+
 Outputs:
   SSMParameterNameApiDomainName:
     Value: !Ref SSMParameterApiDomainName
@@ -136,4 +143,7 @@ Outputs:
 
   SSMParameterNameApiOriginPath:
     Value: !Ref SSMParameterApiOriginPath
+
+  SSMParameterNameSearchFunctionName:
+    Value: !Ref SSMParameterSearchFunctionName
 
