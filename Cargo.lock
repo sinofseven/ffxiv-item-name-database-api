@@ -577,7 +577,7 @@ dependencies = [
 [[package]]
 name = "lambda"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-lambda-rust-runtime/#a9de2fcb24030a00e402348aba3c368b717feb6d"
+source = "git+https://github.com/awslabs/aws-lambda-rust-runtime/?rev=a9de2fcb24030a00e402348aba3c368b717feb6d#a9de2fcb24030a00e402348aba3c368b717feb6d"
 dependencies = [
  "async-stream",
  "bytes",
@@ -597,7 +597,7 @@ dependencies = [
 [[package]]
 name = "lambda-attributes"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-lambda-rust-runtime/#a9de2fcb24030a00e402348aba3c368b717feb6d"
+source = "git+https://github.com/awslabs/aws-lambda-rust-runtime/?rev=a9de2fcb24030a00e402348aba3c368b717feb6d#a9de2fcb24030a00e402348aba3c368b717feb6d"
 dependencies = [
  "proc-macro2 0.4.30",
  "quote",
@@ -607,7 +607,7 @@ dependencies = [
 [[package]]
 name = "lambda_http"
 version = "0.2.0-beta.1"
-source = "git+https://github.com/awslabs/aws-lambda-rust-runtime/#a9de2fcb24030a00e402348aba3c368b717feb6d"
+source = "git+https://github.com/awslabs/aws-lambda-rust-runtime/?rev=a9de2fcb24030a00e402348aba3c368b717feb6d#a9de2fcb24030a00e402348aba3c368b717feb6d"
 dependencies = [
  "base64 0.12.3",
  "http",
