@@ -28,7 +28,6 @@ struct ResponseData {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    lambda::run(handler(lambda_handler)).await?;
     Ok(())
 }
 
