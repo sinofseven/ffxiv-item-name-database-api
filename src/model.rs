@@ -1,4 +1,5 @@
 use lambda_http::{Request, RequestExt, Response};
+use log::{error, info};
 use rusoto_dynamodb::AttributeValue;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -121,13 +122,14 @@ fn create_response(status: u16, error: &str, message: Option<String>) -> Respons
 
 pub enum HttpErrorType {
     BadRequest(String),
-    InternalServerError,
+    InternalServerError(String),
 }
 
 impl HttpErrorType {
     pub fn create_response(&self) -> Response<String> {
         match self {
-            HttpErrorType::InternalServerError => {
+            HttpErrorType::InternalServerError(message) => {
+                error!("{}", message);
                 create_response(500, "InternalServerError", Option::None)
             }
             HttpErrorType::BadRequest(message) => {
@@ -149,10 +151,10 @@ pub fn parse_query(event: &Request) -> HashMap<String, String> {
 
 pub fn get_table_name() -> Result<String, HttpErrorType> {
     match env::var("TABLE_NAME") {
-        Err(e) => {
-            println!("failed get environment {:?}", e);
-            Err(HttpErrorType::InternalServerError)
-        }
+        Err(e) => Err(HttpErrorType::InternalServerError(format!(
+            "Environment Value TABLE_NAME does not exist. ({})",
+            e
+        ))),
         Ok(name) => Ok(name),
     }
 }
@@ -160,29 +162,58 @@ pub fn get_table_name() -> Result<String, HttpErrorType> {
 pub fn convert_dynamodb_item_to_item(
     item: &HashMap<String, AttributeValue>,
 ) -> Result<Item, HttpErrorType> {
-    println!("Item Data {:?}", item);
+    info!("Item: {:?}", item);
     let item_search_category = match item.get("ItemSearchCategory") {
-        None => return Err(HttpErrorType::InternalServerError),
+        None => {
+            return Err(HttpErrorType::InternalServerError(
+                "ItemSearchCategory does not exist.".to_string(),
+            ))
+        }
         Some(attr) => match &attr.m {
-            None => return Err(HttpErrorType::InternalServerError),
+            None => {
+                return Err(HttpErrorType::InternalServerError(
+                    "ItemSearchCategory does not exist.".to_string(),
+                ))
+            }
             Some(map) => map,
         },
     };
     Ok(Item {
         id: match item.get("ID") {
-            None => return Err(HttpErrorType::InternalServerError),
+            None => {
+                return Err(HttpErrorType::InternalServerError(
+                    "ID does not exist.".to_string(),
+                ))
+            }
             Some(id) => match &id.n {
-                None => return Err(HttpErrorType::InternalServerError),
+                None => {
+                    return Err(HttpErrorType::InternalServerError(
+                        "ID does not exist".to_string(),
+                    ))
+                }
                 Some(id) => match id.parse::<u32>() {
-                    Err(_) => return Err(HttpErrorType::InternalServerError),
+                    Err(e) => {
+                        return Err(HttpErrorType::InternalServerError(format!(
+                            "ID '{}' failed to parse::<u32>(): {}",
+                            id, e
+                        )))
+                    }
                     Ok(id) => id,
                 },
             },
         },
         icon: match item.get("Icon") {
-            None => return Err(HttpErrorType::InternalServerError),
+            None => {
+                return Err(HttpErrorType::InternalServerError(
+                    "Icon does not exist.".to_string(),
+                ))
+            }
             Some(icon) => match &icon.s {
-                None => return Err(HttpErrorType::InternalServerError),
+                None => {
+                    return Err(HttpErrorType::InternalServerError(
+                        "Icon does not exist.".to_string(),
+                    ))
+                }
                 Some(icon) => icon.clone(),
             },
         },
@@ -192,7 +223,12 @@ pub fn convert_dynamodb_item_to_item(
                 Some(id) => match &id.n {
                     None => None,
                     Some(id) => match id.parse::<u32>() {
-                        Err(_) => return Err(HttpErrorType::InternalServerError),
+                        Err(e) => {
+                            return Err(HttpErrorType::InternalServerError(format!(
+                                "ItemSearchCategory.ID '{}' failed to parse::<u32>(): {}",
+                                id, e
+                            )))
+                        }
                         Ok(id) => Some(id),
                     },
                 },
@@ -206,37 +242,77 @@ pub fn convert_dynamodb_item_to_item(
             },
         },
         name_de: match item.get("Name_de") {
-            None => return Err(HttpErrorType::InternalServerError),
+            None => {
+                return Err(HttpErrorType::InternalServerError(
+                    "Name_de does not exist.".to_string(),
+                ))
+            }
             Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
+                None => {
+                    return Err(HttpErrorType::InternalServerError(
+                        "Name_de does not exist.".to_string(),
+                    ))
+                }
                 Some(name) => name.clone(),
             },
         },
         name_en: match item.get("Name_en") {
-            None => return Err(HttpErrorType::InternalServerError),
+            None => {
+                return Err(HttpErrorType::InternalServerError(
+                    "Name_en does not exist.".to_string(),
+                ))
+            }
             Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
+                None => {
+                    return Err(HttpErrorType::InternalServerError(
+                        "Name_en does not exist.".to_string(),
+                    ))
+                }
                 Some(name) => name.clone(),
             },
         },
         name_fr: match item.get("Name_fr") {
-            None => return Err(HttpErrorType::InternalServerError),
+            None => {
+                return Err(HttpErrorType::InternalServerError(
+                    "Name_fr does not exist.".to_string(),
+                ))
+            }
             Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
+                None => {
+                    return Err(HttpErrorType::InternalServerError(
+                        "Name_fr does not exist.".to_string(),
+                    ))
+                }
                 Some(name) => name.clone(),
             },
         },
         name_ja: match item.get("Name_ja") {
-            None => return Err(HttpErrorType::InternalServerError),
+            None => {
+                return Err(HttpErrorType::InternalServerError(
+                    "Name_ja does not exist.".to_string(),
+                ))
+            }
             Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
+                None => {
+                    return Err(HttpErrorType::InternalServerError(
+                        "Name_ja does not exist.".to_string(),
+                    ))
+                }
                 Some(name) => name.clone(),
             },
         },
         eorzea_database_id: match item.get("EorzeaDatabaseId") {
-            None => return Err(HttpErrorType::InternalServerError),
+            None => {
+                return Err(HttpErrorType::InternalServerError(
+                    "EorzeaDatabaseId does not exist.".to_string(),
+                ))
+            }
             Some(name) => match &name.s {
-                None => return Err(HttpErrorType::InternalServerError),
+                None => {
+                    return Err(HttpErrorType::InternalServerError(
+                        "EorzeaDatabaseId does not exist.".to_string(),
+                    ))
+                }
                 Some(name) => name.clone(),
             },
         },

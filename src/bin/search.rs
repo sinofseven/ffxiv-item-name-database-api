@@ -1,7 +1,7 @@
-use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
-use std::collections::HashMap;
-use log::{info, error};
 use env_logger;
+use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
+use log::{info, warn};
+use std::collections::HashMap;
 
 use ffxiv_item_name_database_api::model::{
     convert_dynamodb_item_to_item, get_table_name, parse_query, sort_func, HttpErrorType, Item,
@@ -14,7 +14,6 @@ use serde::Serialize;
 use std::str::FromStr;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
-
 
 #[derive(Debug, Serialize)]
 struct Condition {
@@ -37,8 +36,8 @@ async fn main() -> Result<(), Error> {
 
 async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse, Error> {
     match env_logger::try_init() {
-        Err(e) => error!("logger init error: {:?}", e),
-        Ok(_) => ()
+        Err(e) => warn!("error occurred in env_logger::try_init(): {}", e),
+        Ok(_) => (),
     };
     info!("event: {:?}", event);
     let query = parse_query(&event);
@@ -123,8 +122,10 @@ async fn scan_and_sort(
 
         let resp = match client.scan(input).await {
             Err(e) => {
-                println!("scan error{:?}", e);
-                return Err(HttpErrorType::InternalServerError);
+                return Err(HttpErrorType::InternalServerError(format!(
+                    "error occurred in scan: {}",
+                    e
+                )))
             }
             Ok(resp) => resp,
         };
@@ -138,7 +139,7 @@ async fn scan_and_sort(
 
         for item in items {
             result.push(match convert_dynamodb_item_to_item(&item) {
-                Err(_) => return Err(HttpErrorType::InternalServerError),
+                Err(e) => return Err(e),
                 Ok(item) => item,
             });
         }

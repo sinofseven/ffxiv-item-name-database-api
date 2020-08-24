@@ -1,7 +1,9 @@
+use env_logger;
 use ffxiv_item_name_database_api::model::{
     convert_dynamodb_item_to_item, get_table_name, parse_query, sort_func, HttpErrorType, Item,
 };
 use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
+use log::{info, warn};
 use rusoto_core::Region;
 use rusoto_dynamodb::{
     AttributeValue, BatchGetItemInput, DynamoDb, DynamoDbClient, KeysAndAttributes,
@@ -30,6 +32,11 @@ struct ResponseData {
 }
 
 async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse, Error> {
+    match env_logger::try_init() {
+        Err(e) => warn!("error occurred in env_logger::try_init(): {}", e),
+        Ok(_) => (),
+    };
+    info!("event: {:?}", event);
     let query = parse_query(&event);
     let ids = match parse_ids(&query) {
         Err(e) => return Ok(e.create_response()),
@@ -40,6 +47,7 @@ async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse,
         Err(e) => return Ok(e.create_response()),
         Ok(name) => name,
     };
+    info!("table name: {}", table_name);
     let filtered = match get_data(&ids, &table_name).await {
         Err(e) => return Ok(e.create_response()),
         Ok(data) => data,
@@ -104,13 +112,7 @@ async fn get_data(ids: &Vec<u32>, table_name: &String) -> Result<Vec<Item>, Http
             ..Default::default()
         });
         while keys_and_attributes.is_some() {
-            let current: KeysAndAttributes = match &keys_and_attributes {
-                None => {
-                    println!("failed get current keys and attributes");
-                    return Err(HttpErrorType::InternalServerError);
-                }
-                Some(keys) => keys.clone(),
-            };
+            let current: KeysAndAttributes = keys_and_attributes.unwrap();
 
             let mut request_items: HashMap<String, KeysAndAttributes> = HashMap::new();
             request_items.insert(table_name.clone(), current);
@@ -121,8 +123,10 @@ async fn get_data(ids: &Vec<u32>, table_name: &String) -> Result<Vec<Item>, Http
 
             let resp = match client.batch_get_item(input).await {
                 Err(e) => {
-                    println!("failed fetch data: {:?}", e);
-                    return Err(HttpErrorType::InternalServerError);
+                    return Err(HttpErrorType::InternalServerError(format!(
+                        "failed fetch data: {}",
+                        e
+                    )))
                 }
                 Ok(resp) => resp,
             };
