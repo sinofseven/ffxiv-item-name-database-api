@@ -15,6 +15,7 @@ use std::str::FromStr;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
+
 #[derive(Debug, Serialize)]
 struct Condition {
     string: String,
@@ -30,12 +31,12 @@ struct ResponseData {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    env_logger::init();
     lambda::run(handler(lambda_handler)).await?;
     Ok(())
 }
 
 async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse, Error> {
-    env_logger::init();
     info!("event: {:?}", event);
     let query = parse_query(&event);
     info!("query: {:?}", query);
