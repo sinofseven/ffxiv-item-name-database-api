@@ -18,6 +18,7 @@ Globals:
     Environment:
       Variables:
         TABLE_NAME: !Ref DataTableName
+        RUST_LOG: info
 
 Resources:
   HttpApi:

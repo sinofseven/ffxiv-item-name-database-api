@@ -1,6 +1,7 @@
 use lambda_http::{handler, lambda, Context, IntoResponse, Request, Response};
 use std::collections::HashMap;
 use log::{info, error};
+use env_logger;
 
 use ffxiv_item_name_database_api::model::{
     convert_dynamodb_item_to_item, get_table_name, parse_query, sort_func, HttpErrorType, Item,
@@ -34,6 +35,7 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse, Error> {
+    env_logger::init();
     info!("event: {:?}", event);
     let query = parse_query(&event);
     info!("query: {:?}", query);
