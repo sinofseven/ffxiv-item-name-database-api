@@ -31,12 +31,15 @@ struct ResponseData {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    env_logger::init();
     lambda::run(handler(lambda_handler)).await?;
     Ok(())
 }
 
 async fn lambda_handler(event: Request, _: Context) -> Result<impl IntoResponse, Error> {
+    match env_logger::try_init() {
+        Err(e) => error!("logger init error: {:?}", e),
+        Ok(_) => ()
+    };
     info!("event: {:?}", event);
     let query = parse_query(&event);
     info!("query: {:?}", query);
