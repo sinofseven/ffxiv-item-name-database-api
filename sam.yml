@@ -70,6 +70,23 @@ Resources:
             Path: /api/list
             PayloadFormatVersion: "1.0"
 
+  CheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/check.zip
+      Handler: lambda_handler
+      Runtime: provided
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
+      Events:
+        HttpApiV2:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: GET
+            Path: /api/check
+            PayloadFormatVersion: "1.0"
+
   PythonSearchFunction:
     Type: AWS::Serverless::Function
     Properties:
